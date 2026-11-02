@@ -6,7 +6,7 @@ import hudson.Extension;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.cps.GroovyShellDecorator;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.io.File;
 import java.net.MalformedURLException;
 
@@ -27,8 +27,8 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
             @Override
             public void configureShell(CpsFlowExecution context, GroovyShell shell) {
                 try {
-                    shell.getClassLoader().addURL(new File(repo.workspace,"src").toURI().toURL());
-                    shell.getClassLoader().addURL(new File(repo.workspace, UserDefinedGlobalVariable.PREFIX).toURI().toURL());
+                    shell.getClassLoader().addURL(repo.workspace.resolve("src").toUri().toURL());
+                    shell.getClassLoader().addURL(repo.workspace.resolve(UserDefinedGlobalVariableList.PREFIX).toUri().toURL());
                 } catch (MalformedURLException e) {
                     throw new AssertionError(e);
                 }

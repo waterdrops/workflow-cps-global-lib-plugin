@@ -2,10 +2,8 @@ package org.jenkinsci.plugins.workflow.cps.global;
 
 import hudson.model.Result;
 import java.io.File;
-import java.util.Arrays;
 
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -14,7 +12,7 @@ import static org.junit.Assert.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.ClassRule;
@@ -49,7 +47,7 @@ public class WorkflowLibRepositoryTest {
     public void globalLib() throws Exception {
         story.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
-                File dir = new File(repo.workspace,"src/foo");
+                File dir = repo.workspace.resolve("src/foo").toFile();
                 dir.mkdirs();
 
                 FileUtils.write(new File(dir, "Foo.groovy"),
@@ -106,28 +104,24 @@ public class WorkflowLibRepositoryTest {
     public void userDefinedGlobalVariable() throws Exception {
         story.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
-                File vars = new File(repo.workspace, UserDefinedGlobalVariable.PREFIX);
+                File vars = repo.workspace.resolve(UserDefinedGlobalVariableList.PREFIX).toFile();
                 vars.mkdirs();
-                FileUtils.writeStringToFile(new File(vars, "acmeVar.groovy"), StringUtils.join(Arrays.asList(
+                FileUtils.writeStringToFile(new File(vars, "acmeVar.groovy"), String.join("\n",
                         "def hello(name) {echo \"Hello ${name}\"}",
                         "def foo(x) { this.x = x+'-set'; }",
-                        "def bar() { return x+'-get' }")
-                        , "\n"));
-                FileUtils.writeStringToFile(new File(vars, "acmeFunc.groovy"), StringUtils.join(Arrays.asList(
-                        "def call(a,b) { echo \"call($a,$b)\" }")
-                        , "\n"));
-                FileUtils.writeStringToFile(new File(vars, "acmeBody.groovy"), StringUtils.join(Arrays.asList(
+                        "def bar() { return x+'-get' }"));
+                FileUtils.writeStringToFile(new File(vars, "acmeFunc.groovy"), String.join("\n",
+                        "def call(a,b) { echo \"call($a,$b)\" }"));
+                FileUtils.writeStringToFile(new File(vars, "acmeBody.groovy"), String.join("\n",
                         "def call(body) { ",
                         "  def config = [:]",
                         "  body.resolveStrategy = Closure.DELEGATE_FIRST",
                         "  body.delegate = config",
                         "  body()",
                         "  echo 'title was '+config.title",
-                        "}")
-                        , "\n"));
-                FileUtils.writeStringToFile(new File(vars, "acmeClass.groovy"), StringUtils.join(Arrays.asList(
-                        "@groovy.transform.Field int answer = 42")
-                        , "\n"));
+                        "}"));
+                FileUtils.writeStringToFile(new File(vars, "acmeClass.groovy"), String.join("\n",
+                        "@groovy.transform.Field int answer = 42"));
 
                 // simulate the effect of push
                 uvl.rebuild();
@@ -159,7 +153,7 @@ public class WorkflowLibRepositoryTest {
     @Test public void restartGlobalVar() {
         story.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
-                File vars = new File(repo.workspace, UserDefinedGlobalVariable.PREFIX);
+                File vars = repo.workspace.resolve(UserDefinedGlobalVariableList.PREFIX).toFile();
                 vars.mkdirs();
                 FileUtils.writeStringToFile(new File(vars, "block.groovy"), "def call(body) {node {body()}}");
                 uvl.rebuild();
@@ -186,7 +180,7 @@ public class WorkflowLibRepositoryTest {
             @Override public void evaluate() throws Throwable {
                 File f = new File(jenkins.getRootDir(), "f");   // marker file to write from Pipeline Script
 
-                FileUtils.write(new File(new File(repo.workspace, "src/pkg"), "Privileged.groovy"),
+                FileUtils.write(repo.workspace.resolve("src/pkg").resolve("Privileged.groovy").toFile(),
                     "package pkg\n" +
                     "class Privileged implements Serializable {\n" +
                     "  void write(String content) {\n" +
@@ -196,7 +190,7 @@ public class WorkflowLibRepositoryTest {
                     "    body()\n" +
                     "  }\n" +
                     "}");
-                FileUtils.write(new File(new File(repo.workspace, UserDefinedGlobalVariable.PREFIX), "record.groovy"),
+                FileUtils.write(repo.workspace.resolve(UserDefinedGlobalVariableList.PREFIX).resolve("record.groovy").toFile(),
                     "def call() {new pkg.Privileged().write(jenkins.model.Jenkins.instance.systemMessage)}");
                 WorkflowJob p = jenkins.createProject(WorkflowJob.class, "p");
 

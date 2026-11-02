@@ -8,7 +8,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.jenkinsci.plugins.workflow.cps.GlobalVariable;
 import org.jenkinsci.plugins.workflow.cps.GlobalVariableSet;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,6 +22,9 @@ import java.util.List;
  */
 @Extension
 public class UserDefinedGlobalVariableList extends GlobalVariableSet {
+
+    /*package*/ static final String PREFIX = "vars";
+
     private @Inject WorkflowLibRepository repo;
     
     private volatile CopyOnWriteList<GlobalVariable> ours;
@@ -30,7 +33,7 @@ public class UserDefinedGlobalVariableList extends GlobalVariableSet {
      * Rebuilds the list of {@link UserDefinedGlobalVariable}s and update {@link ExtensionList} accordingly.
      */
     public synchronized void rebuild() {
-        File[] children = new File(repo.workspace,UserDefinedGlobalVariable.PREFIX).listFiles();
+        File[] children = repo.workspace.resolve(PREFIX).toFile().listFiles();
         if (children==null) children = new File[0];
 
         List<GlobalVariable> list = new ArrayList<GlobalVariable>();
@@ -39,7 +42,8 @@ public class UserDefinedGlobalVariableList extends GlobalVariableSet {
             if (!child.getName().endsWith(".groovy") || child.isDirectory())
                 continue;
 
-            UserDefinedGlobalVariable uv = new UserDefinedGlobalVariable(repo,FilenameUtils.getBaseName(child.getName()));
+            String name = FilenameUtils.getBaseName(child.getName());
+            UserDefinedGlobalVariable uv = new UserDefinedGlobalVariable(name, repo.workspace.resolve(PREFIX).resolve(name + ".txt").toFile());
             list.add(uv);
         }
 

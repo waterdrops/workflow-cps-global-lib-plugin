@@ -10,7 +10,7 @@ import org.eclipse.jgit.transport.ReceiveCommand;
 import org.eclipse.jgit.transport.ReceivePack;
 import org.jenkinsci.plugins.gitserver.FileBackedHttpGitRepository;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -30,13 +30,13 @@ public class WorkflowLibRepository extends FileBackedHttpGitRepository implement
     }
 
     /**
-     * Get the root of the {@link WorkflowLibRepository} git repository on the master.
+     * Get the root of the {@link WorkflowLibRepository} git repository on the controller.
      *
      * To use the repository for things other than {@link UserDefinedGlobalVariable}s, call this to get the repository,
      * and extend {@link WorkflowLibRepositoryListener} to listen for pushes to the repository in order to respond to
      * those pushes by rebuilding stored classes/scripts, etc.
      *
-     * @return A {@link File} pointing to the {@link WorkflowLibRepository} git repository on the master.
+     * @return A {@link File} pointing to the {@link WorkflowLibRepository} git repository on the controller.
      */
     public static File workspace() {
         return new File(Jenkins.get().root, "workflow-libs");
